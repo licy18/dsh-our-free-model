@@ -52,6 +52,7 @@ import {
   OpenAiGatewayError,
   convertTools,
   createGatewayMessage,
+  createGatewayToolMessage,
   gatewaySource,
   parseModelRoute,
   partsFromContent,
@@ -468,11 +469,12 @@ async function toMessages(
     if (type === 'function_call_output') {
       const callId = nonEmptyString(raw.call_id)
       if (callId === undefined) throw new OpenAiGatewayError('function_call_output requires call_id')
-      messages.push(createGatewayMessage('user', [{
-        type: 'tool-result',
-        toolCallId: callId as never,
-        content: await outputParts(raw.output, bridge, limits),
-      }], { kind: 'tool', callId: callId as never }))
+      // 与 Chat 端点同形：形状交给宿主决定（见 messages.ts 的
+      // `createGatewayToolMessage`），外部 provider 没有包裹块的兼容层。
+      messages.push(createGatewayToolMessage(
+        callId,
+        await outputParts(raw.output, bridge, limits),
+      ))
       continue
     }
     if (type === 'reasoning') {

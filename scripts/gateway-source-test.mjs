@@ -25,6 +25,7 @@ const hooks = registerHooks({
 try {
   const { toGenerateOptions } = await import('../vendor/channel-pack/src/openai-gateway/messages.ts')
   const { toResponsesGenerateOptions } = await import('../vendor/channel-pack/src/openai-gateway/responses.ts')
+  const { createToolResultMessage } = await import(kernel)
   const signal = new AbortController().signal
   const chat = await toGenerateOptions({ model: 'test/model', messages: [
     { role: 'system', content: 'system one' }, { role: 'system', content: 'system two' },
@@ -68,6 +69,35 @@ try {
   assert.equal(assistants[1].content.some(block => block.type === 'text' && block.text === '仓库是干净的。'), true)
   assert.equal(assistants[2].content.some(block => block.type === 'reasoning'), false)
   assert.equal(assistants[3].content.find(block => block.type === 'reasoning').text, ' ')
+
+  // Tool answers must reach external providers as the shape the *current* host
+  // defines. `dsh-llm-pi-ai` reads only `role === 'tool'` and otherwise drops the
+  // result (pi-ai then fabricates "No result provided"); `dsh-llm-deepseek`
+  // rejects the legacy wrapper block as UNSUPPORTED_CONTENT. Both endpoints have
+  // to delegate to the host factory instead of pinning one generation.
+  assert.equal(typeof createToolResultMessage, 'function', 'the kernel must export the host tool-result factory')
+  const chatTool = chat.messages.find(m => m.role === 'tool')
+  assert.ok(chatTool, 'chat tool answer must be a tool message')
+  assert.equal(chatTool.toolCallId, 'call-1')
+  assert.deepEqual(chatTool.source, { kind: 'tool', callId: 'call-1' })
+  assert.equal(JSON.stringify(chat.messages).includes('"tool-result"'), false, 'chat must not wrap the result in a tool-result block')
+
+  const responsesTool = await toResponsesGenerateOptions({ model: 'test/model', input: [
+    { type: 'message', role: 'user', content: 'hello' },
+    { type: 'function_call', call_id: 'call-9', name: 'bash', arguments: '{}' },
+    { type: 'function_call_output', call_id: 'call-9', output: 'clean' },
+  ] }, signal)
+  const responsesToolMessage = responsesTool.messages.find(m => m.role === 'tool')
+  assert.ok(responsesToolMessage, 'Responses tool answer must be a tool message')
+  assert.equal(responsesToolMessage.toolCallId, 'call-9')
+  assert.equal(JSON.stringify(responsesTool.messages).includes('"tool-result"'), false, 'Responses must not wrap the result in a tool-result block')
+
+  const failed = await toGenerateOptions({ model: 'test/model', messages: [
+    { role: 'tool', tool_call_id: 'call-err', content: 'boom', is_error: true },
+  ] }, signal)
+  assert.equal(failed.messages[0].role, 'tool')
+
   console.log('ok gateway source: chat system, Responses system/developer/instructions, independent identities and unchanged other roles')
   console.log('ok gateway reasoning: chat history keeps reasoning_content / reasoning, including a single-space placeholder')
+  console.log('ok gateway tools: both endpoints emit the host-defined tool message, never the legacy wrapper block')
 } finally { hooks.deregister() }

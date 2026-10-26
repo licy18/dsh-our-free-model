@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { createToolResultMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import type { GenerateOptions, Message, ToolSchema } from '@deepseek-ai/dsh-llm'
 import {
   DEFAULT_IMAGE_LIMITS,
@@ -267,6 +267,48 @@ export function createGatewayMessage(
 }
 
 /**
+ * 造一条**工具结果消息**，形状由当前宿主决定。
+ *
+ * ## 为什么必须委托宿主，而不是自己拼
+ *
+ * `message-shape.ts` 记录了这次迁移：DSH ≤0.1.6 把工具结果放在 `role:'user'`
+ * 消息里的 `{type:'tool-result',…}` 包裹块中；0.1.7 起改成顶层带 `toolCallId`
+ * 的一等 `role:'tool'` 消息，并从 `ContentBlockMap` 删掉了 `'tool-result'`。
+ *
+ * 网关早先固定产 ≤0.1.6 的包裹块，靠 channel-pack 自家五个序列化器的
+ * `normalizeHarnessMessages()` 兜底，所以 Kilo / TRAE / Qoder 那条线看不出问题。
+ * 但**外部注册的 provider 没有这层兜底**：
+ *
+ * - `dsh-llm-pi-ai` 的 `textOnlyContext` 只认 `message.role === 'tool'`；
+ *   包裹块落进 `flattenText()`（只留 `type:'text'`）后被清空，pi-ai 因此
+ *   认为该工具调用无应答，自行插入 `No result provided`；
+ * - `dsh-llm-deepseek` 的 Messages 序列化器对 `tool-result` 块直接抛
+ *   `UNSUPPORTED_CONTENT`（`DeepSeek Messages cannot represent …`）。
+ *
+ * ⚠️ **反过来硬编码新形状也不行**：那会让 ≤0.1.6 的宿主拿不到 `tool` 角色。
+ * 两代内核都导出 `createToolResultMessage()`，由它负责消息 id、`source`
+ * 与不可变内容，这里只转发调用身份与内容块。
+ *
+ * channel-pack 自家的序列化器仍走 `normalizeHarnessMessages()`，把新形状
+ * 降级成它们认识的包裹块，行为不变。
+ *
+ * @param toolCallId - 与 assistant 的 `tool-call` 块 id 配对的调用 id。
+ * @param content - 结果内容块（文本/图片），由该角色直接承载。
+ * @param isError - 工具失败标记，仅在明确为 `true` 时携带。
+ */
+export function createGatewayToolMessage(
+  toolCallId: string,
+  content: Message['content'],
+  isError?: boolean,
+): Message {
+  return createToolResultMessage({
+    callId: toolCallId as never,
+    content,
+    isError: isError === true,
+  })
+}
+
+/**
  * Chat 入站的思考文本。优先 `reasoning_content`，否则认 `reasoning`。
  * 不 trim：`" "` 是 DeepSeek V4 接受的占位，trim 掉就又变成没回传。
  */
@@ -345,11 +387,13 @@ async function convertMessage(
     // 图片走与 user 消息**同一份**入站实现（附件服务落盘），故这里复用
     // `partsFromContent`；各适配器本就递归消费 `tool-result` 的内嵌图片
     // （见 `trae-adapter.ts` 的 `collectImages` / `userContentParts`）。
-    return createGatewayMessage('user', [{
-      type: 'tool-result',
-      toolCallId: value.tool_call_id as never,
-      content: await partsFromContent(value.content, bridge, limits),
-    }], { kind: 'tool', callId: value.tool_call_id as never })
+    //
+    // 消息形状由当前宿主决定（见 {@link createGatewayToolMessage}）：外部注册的
+    // provider（pi-ai / deepseek Messages）没有形状兼容层，固定任何一种都会坏。
+    return createGatewayToolMessage(
+      value.tool_call_id,
+      await partsFromContent(value.content, bridge, limits),
+    )
   }
   throw new OpenAiGatewayError(`unsupported message role: ${String(role)}`)
 }
