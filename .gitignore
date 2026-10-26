@@ -43,3 +43,7 @@ packages/desktop/src-tauri/.node-license-cache/
 packages/desktop/node_modules/
 
 _audit/
+
+# Fork release signing key (never commit; maintainer-local only).
+ofm-manifest-key.pem
+*.pem
