@@ -29,7 +29,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
-const REPO = 'Ebony-Vinyl/dsh-our-free-model'
+const REPO = 'licy18/dsh-our-free-model'
 
 /**
  * A GitHub raw proxy. On networks where `raw.githubusercontent.com` and
@@ -74,7 +74,7 @@ export const DEFAULT_MANIFEST_SOURCES = [
  * itself — whoever forges the manifest forges the hashes. This key is the step
  * the forger cannot take.
  */
-export const PINNED_MANIFEST_PUBLIC_KEY = 'MCowBQYDK2VwAyEAeLdSVwYFyazc2PIBC0oLsvo4LghGEQz9iXIl3CqRuXI='
+export const PINNED_MANIFEST_PUBLIC_KEY = 'MCowBQYDK2VwAyEAVuUrSTzUrQ8OxXBLfaqE5zvDDZ43SRIc/NybEqpvCqA='
 
 /** The manifest fields a signature covers, in canonical (sorted-key) JSON. */
 const SIGNED_FIELDS = ['version', 'base', 'publishedAt', 'notes', 'files', 'minSupported']
