@@ -59,7 +59,7 @@ git push origin main
 
 - **`feed/manifest.json` 必须在 `main` 分支上。** `DEFAULT_MANIFEST_SOURCES` 走 `raw.githubusercontent.com/<REPO>/main/feed/manifest.json` 与 jsDelivr 镜像；只把清单当 Release 附件不行。
 - **`base` 固定 `../`。** `parseManifest` 拒绝绝对 URL、协议相对路径、反斜杠；它相对于清单自身 URL 解析，因此文件从 `raw.githubusercontent.com/<REPO>/main/<path>` 取。
-- **`files` 上限 80→现已 93 条**（`MAX_FILES` 允许）。`package.json` 必须在列表里。
+- **保持旧升级器的 80 文件、单文件 4 MiB 预算。** 2.7.2 将引擎压缩分片并合并省 Token 模块，当前发布清单为 79 项。`package.json` 必须在列表里；同步后重新运行发布验证，不沿用旧版 93 项清单。
 - **版本号只能前进。** 升级器拒绝把清单版本降到已装版本以下。
 - **改了发布文件就必须重签**，否则 `build-manifest.mjs --check` 会报 `the committed digests do not describe the files on disk`。
 
@@ -95,6 +95,12 @@ C:\Users\CORE\dsh-plugins\dsh-our-free-model-2.7.1.tgz
 ```
 
 装好之后 `src/updater.js` 里的 pin 就是我们的公钥，后续升级链完整属于 fork。
+
+## 同步官方上游
+
+用普通 merge 保留 fork 自有提交，不通过 reset 或强制推送覆盖主线。除网关修复外，还须保留 `src/updater.js` 的 fork 仓库名和原签名公钥；上游新增的 `package.json.repository` 与 `homepage` 也应指向本 fork，避免 profile 更新器重新识别为官方分发。
+
+同步代码后重建 channel pack，通过贡献者检查，再提交候选代码。随后用现有私钥签署候选提交的发布记录，更新 `feed/manifest.json` 与三个 `catalog` 记录，并运行发布检查。代码和签名记录一起验证完成后才推送 `main`，不要让升级源暂时暴露不配套的文件与清单。已有 PR 分支应独立合入官方 main，不能把 fork 的升级源或信任根带入上游 PR。
 
 ## 回滚
 

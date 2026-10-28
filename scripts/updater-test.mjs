@@ -134,7 +134,8 @@ const corruptManifest = manifestFor(newFiles)
 // The mutable ref can move or serve stale bytes; only a resolved SHA is stable.
 const SNAPSHOT = 'a'.repeat(40)
 const NEXT_SNAPSHOT = 'b'.repeat(40)
-const REPOSITORY = 'Ebony-Vinyl/dsh-our-free-model'
+// fork 的更新源是固定的仓库信任边界，快照/镜像夹具使用同一个目标。
+const REPOSITORY = 'licy18/dsh-our-free-model'
 const rawSource = `https://raw.githubusercontent.com/${REPOSITORY}/main/feed/manifest.json`
 const cdnSource = `https://cdn.jsdelivr.net/gh/${REPOSITORY}@main/feed/manifest.json`
 const gcoreSource = `https://gcore.jsdelivr.net/gh/${REPOSITORY}@main/feed/manifest.json`
