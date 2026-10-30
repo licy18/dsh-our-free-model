@@ -273,7 +273,11 @@ export async function collectOpenAiCompletion(
 
 export function failureToOpenAiError(error: unknown): { status: number; body: { error: Record<string, unknown> } } {
   if (error instanceof OpenAiGatewayError) {
-    return { status: error.status, body: { error: { message: error.message, type: error.type, code: error.code } } }
+    const extra = error as OpenAiGatewayError & { upstreamStatus?: number; upstreamCode?: string; retryAfterSeconds?: number }
+    return { status: error.status, body: { error: { message: error.message, type: error.type, code: error.code,
+      ...(extra.upstreamStatus === undefined ? {} : { upstream_status: extra.upstreamStatus }),
+      ...(extra.upstreamCode ? { upstream_code: extra.upstreamCode } : {}),
+      ...(extra.retryAfterSeconds === undefined ? {} : { retry_after_seconds: extra.retryAfterSeconds }) } } }
   }
   // ⚠️ `LlmError` 的 `status` **不是顶层属性**（实测 `'status' in e === false`），
   // 它只落在 `e.failure.status`（`@deepseek-ai/dsh-llm` 的 `LlmFailure`）。

@@ -61,6 +61,13 @@ export function mountOpenAiGateway(ctx: Context, pool?: GatewaySwitchSource): vo
           // 图片入站：把客户端的 base64 图片落成 DSH 附件。缺失时网关仍可正常
           // 提供文本能力，收到图片时明确报「未装载附件服务」而非静默丢图。
           attachments: makeGatewayAttachmentBridge(ctx),
+          imageTransport: () => {
+            try {
+              return ctx.get('openaiCodexTransport') as import('./codex-images.js').CodexImageTransport | undefined
+            } catch {
+              return undefined
+            }
+          },
           home: resolveChannelPackHome(ctx),
           logger,
         })

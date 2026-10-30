@@ -22,6 +22,7 @@ import {
   type OpenAiResponsesRequest,
 } from './responses.js'
 import { collectOpenAiCompletion, failureToOpenAiError, toOpenAiSse } from './stream.js'
+import { runCodexImageRequest, type CodexImageTransport } from './codex-images.js'
 
 export interface GatewayLogger {
   info(message: string): void
@@ -46,6 +47,7 @@ export interface OpenAiGatewayOptions {
    * 以为模型看到了图，而答案其实是基于文本生成的。
    */
   attachments?: AttachmentBridge
+  imageTransport?: () => CodexImageTransport | undefined
   /** 图片限制；缺省用 `images.ts` 里附件服务的实测默认值。 */
   imageLimits?: ImageLimits
   home?: string
@@ -432,6 +434,18 @@ export function createOpenAiGateway(options: OpenAiGatewayOptions): OpenAiGatewa
     // ⚠️ 路径不放在 `/v1/models/…` 之下：客户端会把那些路径当模型 ID 解析。
     if (path === '/v1/reasoning-efforts' && request.method === 'GET') {
       void handleReasoningEfforts(response).catch(error => jsonResponse(response, 502, { error: { message: String(error), type: 'server_error', code: 'model_list_failed' } }))
+      return
+    }
+    if ((path === '/v1/codex/images/generations' || path === '/v1/codex/images/edits') && request.method === 'POST') {
+      if (!request.headers['content-type']?.toLowerCase().startsWith('application/json')) {
+        jsonResponse(response, 415, { error: { message: 'Content-Type must be application/json', type: 'invalid_request_error', code: 'invalid_content_type' } })
+        return
+      }
+      void withRequest(request, response, async (signal) => {
+        const body = await readJson(request, signal)
+        const result = await runCodexImageRequest(body, path.endsWith('/edits'), options.imageTransport?.(), signal)
+        jsonResponse(response, 200, result)
+      })
       return
     }
     if ((path === '/v1/chat/completions' || path === '/v1/responses') && request.method === 'POST') {
