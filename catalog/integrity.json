@@ -1,5 +1,5 @@
 {
-  "version": "2.7.3-ofm.1",
+  "version": "2.7.3-ofm.2",
   "algorithm": "sha256",
   "files": [
     {
@@ -50,7 +50,7 @@
     {
       "path": "package.json",
       "size": 4657,
-      "sha256": "3d301e40077d4253829f929fb66b9ba110219938866b086bd7f9febe31d4c01c"
+      "sha256": "5ecebcc795cc5e2eb2b5a2b95a6183e9c209445cbfe59884599ec286b9674303"
     },
     {
       "path": "src/adapter.js",
