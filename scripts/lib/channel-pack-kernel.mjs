@@ -12,13 +12,8 @@ export const credentialRef = value => value
 export const ReasoningEffortId = value => value
 export const ToolCallId = value => value
 export const createUserMessage = value => value
-/** Mirrors the 0.1.7+ kernel factory this pack targets; the legacy shape is covered by its own fixture. */
 export const createToolResultMessage = ({ callId, content, isError }) => ({
-  id: randomUUID(),
-  role: 'tool',
-  toolCallId: callId,
-  content,
-  ...isError === true ? { isError: true } : {},
+  id: randomUUID(), role: 'tool', toolCallId: callId, content, isError,
   source: { kind: 'tool', callId },
 })
 export const attributionHeaders = () => ({})

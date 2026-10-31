@@ -148,7 +148,7 @@ PROFILE_UPGRADE_REQUIRED: offline dependency migration is not yet available
 以真实目录手工安装时，使用可信源码打出的本地 tarball：
 
 1. 创建 `<DSH_HOME>/profiles/<profile>/vendor/`，在审核过的本仓库目录运行 `npm pack --ignore-scripts --pack-destination "<DSH_HOME>/profiles/<profile>/vendor"`，或将本仓库正式发布的同版本 tarball 放入该目录。本地打包不执行 npm 发布。
-2. 在 profile 的 `package.json` 的 dependencies 中加入 `"dsh-our-free-model": "file:./vendor/dsh-our-free-model-2.7.3-ofm.2.tgz"`。文件名版本跟随仓库 `package.json`，不要改成同名 npm 注册表版本；再通过宿主的安装流程解析依赖。
+2. 在 profile 的 `package.json` 的 dependencies 中加入 `"dsh-our-free-model": "file:./vendor/dsh-our-free-model-2.7.3-ofm.3.tgz"`。文件名版本跟随仓库 `package.json`，不要改成同名 npm 注册表版本；再通过宿主的安装流程解析依赖。
 3. 在 dsh.profile.bundles 末尾追加 `"dsh-our-free-model"`。
 
 包管理器拥有这份安装的字节时，同时将 bundle config 或插件 `settings.json` 的 `distribution` 设为 `managed`，由包管理器统一更新；应用内升级、公告 feed 与热重载会停用，模型功能保留。以后更新时替换可信 tarball 并同步依赖路径，避免包管理器按旧锁文件恢复旧版本。
@@ -605,6 +605,8 @@ cordis context 上、真实内核则指将插件装入 dsh 后启动。三者的
 ## 已知边界
 
 "不限量"指不存在额度体系：无需充值、不按 token 计费、没有套餐与用量面板。但该车道按 session 统计速率，短时间内打满会返回 429。插件将该模型标记为"已达限额"，不做隐藏，下一轮探测自动恢复。
+
+上游会话按对话隔离：每个对话固定映射到一枚稳定的上游会话（映射落盘在数据目录的 session-map.json），并发的不同对话各自持有独立会话，互不共享上游状态。没有携带会话 id 的回合（部分宿主调用形态、本地网关未给出 user/conversation 的请求）会并入一枚保留的 global 会话，与其它无 id 回合共享上游状态（含 KV 缓存）——并行运行多个敏感对话时，请使用带会话 id 的调用形态；插件对首个无 id 回合会输出一条一次性警告（免费车道额度按会话计费，无法为每个无 id 请求铸新会话，这是该配额模型的代价）。聚合车道的请求额外携带 x-session-id 会话头，使按会话维护状态的提供商不会把同一 Key 上的并发对话混在一起；EAC 车道按设计不发送会话头——其共享号池的准入门禁不识别免费车道的会话指纹。
 
 部分模型上游本身延迟较高。nemotron-3.5-lightning-free 曾实测首字延迟超过 30 秒。此为上游延迟，看板会如实显示。
 
