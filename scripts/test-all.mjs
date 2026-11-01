@@ -146,6 +146,7 @@ const suites = [
   ['bench-integration', 'bench-integration-test.mjs', []],
   ['plugin-bench-ui', 'plugin-bench-ui-test.mjs', []],
   ['gateway-source', 'gateway-source-test.mjs', []],
+  ['gateway-session-id', 'gateway-session-id-test.mjs', []],
   ['codex-image-gateway', 'codex-image-gateway-test.mjs', []],
   ['codex-image-pack', 'codex-image-pack-test.mjs', []],
   ['gateway-disconnect', 'gateway-disconnect-test.mjs', []],
