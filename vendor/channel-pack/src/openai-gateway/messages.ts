@@ -9,6 +9,7 @@ import {
   type ImageLimits,
 } from './images.js'
 import { isThinkingOffEffort, translateReasoningEffort } from '../reasoning-ladder.js'
+import { gatewaySessionFor } from './gateway-session.js'
 
 export class OpenAiGatewayError extends Error {
   constructor(
@@ -424,26 +425,6 @@ export function tokenValue(value: unknown, name: string): number | undefined {
 }
 
 /**
- * 网关这一侧的上游会话标识，全体网关流量共用。
- *
- * DSH 应用内对话把会话 ID 交给 pi-ai，由 `withOpenCodeSessionHeader()` 写成
- * `x-opencode-session`；网关路径没有对话身份，缺这个头时 OpenCode Go 直接回
- * 400 `MissingSessionID`（"cannot be routed efficiently"）。网关本身就是共享
- * 入口，没有「哪一个对话」可言，所以统一带一个固定值：它只给上游的路由亲和
- * 一个落点，不承担身份语义。
- *
- * pi-ai 的包装器见到调用方已显式给出该头就会让路，因此这里下发 `sessionId`
- * 即等价于钉住网关侧的亲和，且不会覆盖宿主在应用内为每个对话注入的值。
- *
- * 只对明确要求它的 provider 下发：免费车道沿用自己按 seed 取的 `global`，
- * 不因网关的这层需要而改变已验证的会话映射。
- */
-const GATEWAY_UPSTREAM_SESSION = 'ses_ofm0gateway0shared0000000'
-
-/** 上游要求 per-request 会话标识的 provider。 */
-const SESSION_REQUIRED_PROVIDERS = new Set(['opencode-go'])
-
-/**
  * @param reasoningEffortOverride 网关归一化后的档位。**三态**：
  * - `string`：用它；
  * - `null`：**明确不下发**（模型未声明思考档位，硬塞只会让 DSH 侧报
@@ -512,7 +493,7 @@ export async function toGenerateOptions(
     // 两者都不能写进请求。写成 `=== undefined` 会把 null 塞进
     // `ReasoningEffortId(null)`，等于又发了一个非法档位。
     ...reasoningEffort == null ? {} : { reasoningEffort: ReasoningEffortId(reasoningEffort) },
-    ...SESSION_REQUIRED_PROVIDERS.has(provider) ? { sessionId: GATEWAY_UPSTREAM_SESSION } : {},
+    ...gatewaySessionFor(provider) === undefined ? {} : { sessionId: gatewaySessionFor(provider) },
     signal,
   }
 }

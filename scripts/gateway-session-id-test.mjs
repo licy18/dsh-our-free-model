@@ -35,7 +35,7 @@ registerHooks({
         format: 'module',
         shortCircuit: true,
         source: fs.readFileSync(fileURLToPath(url), 'utf8')
-          + '\nexport { toGenerateOptions };\n',
+          + '\nexport { toGenerateOptions, toResponsesGenerateOptions };\n',
       }
     }
     if (url.startsWith(sourceRoot) && url.endsWith('.ts')) {
@@ -56,7 +56,19 @@ const build = async label => {
   return module.toGenerateOptions
 }
 
+/** Both endpoints build their own options; the requirement belongs to neither alone. */
+const buildResponses = async label => {
+  const module = await import(label === 'source'
+    ? new URL('../vendor/channel-pack/src/openai-gateway/responses.ts', import.meta.url).href
+    : packUrl)
+  return module.toResponsesGenerateOptions
+}
+
 const body = model => ({ model, messages: [{ role: 'user', content: 'ping' }] })
+const responsesBody = model => ({
+  model,
+  input: [{ role: 'user', content: [{ type: 'input_text', text: 'ping' }] }],
+})
 
 for (const label of ['source', 'bundle']) {
   const toGenerateOptions = await build(label)
@@ -76,6 +88,21 @@ for (const label of ['source', 'bundle']) {
   assert.equal(other.sessionId, undefined, `${label}: unrelated providers must not be given a session id`)
 
   console.log(`PASS ${label}: opencode-go pinned to one gateway session id; free lane and other providers untouched`)
+
+  // `/v1/responses` has its own builder; it missed the id once already.
+  const toResponsesGenerateOptions = await buildResponses(label)
+  const paidResponses = await toResponsesGenerateOptions(responsesBody('opencode-go/deepseek-v4.1-flash'), signal)
+  assert.equal(paidResponses.sessionId, paid.sessionId, `${label}: the Responses endpoint must pin the same gateway id`)
+  const paidResponsesAgain = await toResponsesGenerateOptions(responsesBody('opencode-go/deepseek-v4.1-flash'), signal)
+  assert.equal(paidResponsesAgain.sessionId, paid.sessionId, `${label}: the Responses endpoint id must be stable`)
+
+  const freeResponses = await toResponsesGenerateOptions(responsesBody('our-free-model/deepseek-v4.1-flash-free'), signal)
+  assert.equal(freeResponses.sessionId, undefined, `${label}: the Responses endpoint must not touch the free lane`)
+
+  const otherResponses = await toResponsesGenerateOptions(responsesBody('deepseek-official/deepseek-flash'), signal)
+  assert.equal(otherResponses.sessionId, undefined, `${label}: the Responses endpoint must not touch other providers`)
+
+  console.log(`PASS ${label}: both endpoints share one gateway id; other routes stay untouched, Responses included`)
 }
 
 // The value must be a plausible OpenCode session token, not an empty placeholder.

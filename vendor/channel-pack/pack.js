@@ -56530,6 +56530,13 @@ async function toImageBlock2(url, bridge, limits, already) {
   return { type: "image", attachment: ref };
 }
 
+// vendor/channel-pack/src/openai-gateway/gateway-session.ts
+var GATEWAY_UPSTREAM_SESSION = "ses_ofm0gateway0shared0000000";
+var SESSION_REQUIRED_PROVIDERS = /* @__PURE__ */ new Set(["opencode-go"]);
+function gatewaySessionFor(provider) {
+  return SESSION_REQUIRED_PROVIDERS.has(provider) ? GATEWAY_UPSTREAM_SESSION : void 0;
+}
+
 // vendor/channel-pack/src/openai-gateway/messages.ts
 var OpenAiGatewayError = class extends Error {
   constructor(message, status = 400, type = "invalid_request_error", code = "invalid_request") {
@@ -56733,8 +56740,6 @@ function tokenValue(value, name2) {
   }
   return value;
 }
-var GATEWAY_UPSTREAM_SESSION = "ses_ofm0gateway0shared0000000";
-var SESSION_REQUIRED_PROVIDERS = /* @__PURE__ */ new Set(["opencode-go"]);
 async function toGenerateOptions(body, signal, reasoningEffortOverride, maxTokensOverride, images = {}) {
   const { provider, model } = parseModelRoute(body.model);
   if (!Array.isArray(body.messages) || body.messages.length === 0) {
@@ -56772,7 +56777,7 @@ async function toGenerateOptions(body, signal, reasoningEffortOverride, maxToken
     // 两者都不能写进请求。写成 `=== undefined` 会把 null 塞进
     // `ReasoningEffortId(null)`，等于又发了一个非法档位。
     ...reasoningEffort == null ? {} : { reasoningEffort: ReasoningEffortId10(reasoningEffort) },
-    ...SESSION_REQUIRED_PROVIDERS.has(provider) ? { sessionId: GATEWAY_UPSTREAM_SESSION } : {},
+    ...gatewaySessionFor(provider) === void 0 ? {} : { sessionId: gatewaySessionFor(provider) },
     signal
   };
 }
@@ -57360,6 +57365,7 @@ async function toResponsesGenerateOptions(body, signal, reasoningEffortOverride,
     ...maxTokens === void 0 ? {} : { maxTokens },
     ...temperature === void 0 ? {} : { temperature },
     ...reasoningEffort == null ? {} : { reasoningEffort: ReasoningEffortId11(reasoningEffort) },
+    ...gatewaySessionFor(provider) === void 0 ? {} : { sessionId: gatewaySessionFor(provider) },
     signal
   };
 }
