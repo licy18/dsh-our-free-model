@@ -1,5 +1,5 @@
 {
-  "version": "2.7.3-ofm.3",
+  "version": "2.7.3-ofm.4",
   "algorithm": "sha256",
   "files": [
     {
@@ -50,7 +50,7 @@
     {
       "path": "package.json",
       "size": 5023,
-      "sha256": "e8c8d3972bb0254898990d0c36f7d6525d323e1958090e81407d1da053651952"
+      "sha256": "90469397e79ff67f5668b6d9f7690b026802d0e42c5c4b6e88dd84043c8f9d3a"
     },
     {
       "path": "src/adapter.js",
@@ -379,8 +379,8 @@
     },
     {
       "path": "vendor/channel-pack/pack.js",
-      "size": 2627492,
-      "sha256": "b0d3bdaf897b7f5c28f6569c37fc44dbec301edd967dad2c044748c4f910f348"
+      "size": 2625527,
+      "sha256": "ecc6bf0e3ed8985aab017846c0ba1ed96a76de5d86c7fffa0b8ab249a061381a"
     },
     {
       "path": "vendor/channel-pack/qoder-auth-wasm.wasm",
