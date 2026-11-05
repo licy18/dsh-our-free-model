@@ -1,5 +1,5 @@
 {
-  "version": "2.8.0",
+  "version": "2.8.0-ofm.1",
   "algorithm": "sha256",
   "files": [
     {
@@ -49,8 +49,8 @@
     },
     {
       "path": "package.json",
-      "size": 5110,
-      "sha256": "5438b75fa1835d7e69aa41480468280c9e42ac6fc7697fefa91f43432a016417"
+      "size": 5106,
+      "sha256": "9b3b8106571522ccc343afa45477cb71aa14039e4e843c761362744d991658db"
     },
     {
       "path": "src/adapter.js",
@@ -74,8 +74,8 @@
     },
     {
       "path": "src/catalog.js",
-      "size": 31733,
-      "sha256": "9f530588b879827c0a104420e789249234d9187ce11a7c095707a8505bd81aa4"
+      "size": 32388,
+      "sha256": "654b44840ff97214a6a6b8fd512b029c5d5bbff1480726f4353554d6808fbb1c"
     },
     {
       "path": "src/chan-relay.js",
@@ -329,8 +329,8 @@
     },
     {
       "path": "src/updater.js",
-      "size": 62762,
-      "sha256": "6dbaf471d7dca20b76e342ecfbc42a4005dff257deeff6d77792883a345328fe"
+      "size": 62757,
+      "sha256": "c4c8997586e41668159e6158af48ffd0b149302d2931ac4f6b77e99cc176f5ed"
     },
     {
       "path": "src/upstream.js",
