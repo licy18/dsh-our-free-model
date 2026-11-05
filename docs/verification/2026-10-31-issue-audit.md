@@ -1,7 +1,7 @@
 # 2026-10-31 全量 issue 审计与修复验证
 
 基线：`origin/main` @ `5fcb5fa`（v2.7.3）。本轮工作分支 `audit/issues-20261031`，最终推送到 `main` @ `9b3f341`。
-**未发版**：`feed/manifest.json` 未重签，未打 tag，未创建 GitHub Release。
+**已发版**：见 `docs/releases/v2.7.4.md`（2.7.4，`feed/manifest.json` 已重签）。
 
 ## 一、合并的社区修复 PR（19 个，均先本地验证再合并）
 

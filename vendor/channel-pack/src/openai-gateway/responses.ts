@@ -60,7 +60,6 @@ import {
   tokenValue,
 } from './messages.js'
 import { normalizeUpstreamFailure } from './model-errors.js'
-import { gatewaySessionFor } from './gateway-session.js'
 import { failureToOpenAiError, withSuggestion, type SuggestionHook } from './stream.js'
 import { toOpenAiUsage } from './usage.js'
 
@@ -597,7 +596,6 @@ export async function toResponsesGenerateOptions(
     ...maxTokens === undefined ? {} : { maxTokens },
     ...temperature === undefined ? {} : { temperature },
     ...reasoningEffort == null ? {} : { reasoningEffort: ReasoningEffortId(reasoningEffort) },
-    ...gatewaySessionFor(provider) === undefined ? {} : { sessionId: gatewaySessionFor(provider) },
     signal,
   }
 }

@@ -39,9 +39,9 @@
 ## 交流群
 
 <div align="center">
-  <img src="docs/images/qq-group-12.png" alt="ai交流群12入群二维码（群号：1130235133）" width="300">
+  <img src="docs/images/qq-group-386179533.png" alt="ai技术交流学习群入群二维码（群号：386179533）" width="300">
   <br>
-  <b>QQ 群：1130235133（ai交流群12）</b>
+  <b>QQ 群：386179533（ai技术交流学习群）</b>
   <br>
   扫码或搜索群号加入群聊，一起交流插件使用心得、反馈问题与分享玩法。
 </div>
@@ -115,15 +115,25 @@ Chat Completions、Responses API，以及独立网页管理（模型、统计、
 
 ## 安装
 
-> **⚠️ 不要通过 npm 安装本插件。**
+> **⚠️ 不要安装 npm 上那个裸名的 `dsh-our-free-model`。**
 >
 > npm 上的 `dsh-our-free-model` 包**不是本仓库发布的**。它由第三方打包，内容与本仓库
 > 不一致：`index.js`、`client.js` 被改动，并额外包含本仓库从未有过的
 > `src/channel-visibility.js`。装到它得不到本项目审核过的构建，也拿不到本仓库的签名
 > 清单校验与应用内升级。
 >
-> 请只按本文档下方的方式安装：使用本仓库的 Release 发布包，或本地源码目录。
+> 本仓库自己发布的是带 scope 的 **`@ebony-vinyl/dsh-our-free-model`**，与 Release 的
+> `dsh-our-free-model-<版本>.tgz` 同源、同版本。只想走 npm 时可以装它：
+>
+> ```
+> dsh plugin --profile web add @ebony-vinyl/dsh-our-free-model@2.8.0
+> ```
+>
+> 注意它的包名带 scope，因此挂载条目是 `@ebony-vinyl/dsh-our-free-model`，与下文
+> 裸包名的本地安装方式不能混用（同一个 profile 里只选一种）。
+>
 > 其它渠道出现的同名包一律以本仓库为准。
+
 
 **命令行（纯 dsh web）**
 
@@ -148,7 +158,7 @@ PROFILE_UPGRADE_REQUIRED: offline dependency migration is not yet available
 以真实目录手工安装时，使用可信源码打出的本地 tarball：
 
 1. 创建 `<DSH_HOME>/profiles/<profile>/vendor/`，在审核过的本仓库目录运行 `npm pack --ignore-scripts --pack-destination "<DSH_HOME>/profiles/<profile>/vendor"`，或将本仓库正式发布的同版本 tarball 放入该目录。本地打包不执行 npm 发布。
-2. 在 profile 的 `package.json` 的 dependencies 中加入 `"dsh-our-free-model": "file:./vendor/dsh-our-free-model-2.7.3-ofm.5.tgz"`。文件名版本跟随仓库 `package.json`，不要改成同名 npm 注册表版本；再通过宿主的安装流程解析依赖。
+2. 在 profile 的 `package.json` 的 dependencies 中加入 `"dsh-our-free-model": "file:./vendor/dsh-our-free-model-2.8.0-ofm.1.tgz"`。文件名版本跟随仓库 `package.json`，不要改成同名 npm 注册表版本；再通过宿主的安装流程解析依赖。
 3. 在 dsh.profile.bundles 末尾追加 `"dsh-our-free-model"`。
 
 包管理器拥有这份安装的字节时，同时将 bundle config 或插件 `settings.json` 的 `distribution` 设为 `managed`，由包管理器统一更新；应用内升级、公告 feed 与热重载会停用，模型功能保留。以后更新时替换可信 tarball 并同步依赖路径，避免包管理器按旧锁文件恢复旧版本。

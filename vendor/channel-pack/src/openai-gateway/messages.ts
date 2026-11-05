@@ -9,7 +9,6 @@ import {
   type ImageLimits,
 } from './images.js'
 import { isThinkingOffEffort, translateReasoningEffort } from '../reasoning-ladder.js'
-import { gatewaySessionFor } from './gateway-session.js'
 
 export class OpenAiGatewayError extends Error {
   constructor(
@@ -493,7 +492,6 @@ export async function toGenerateOptions(
     // 两者都不能写进请求。写成 `=== undefined` 会把 null 塞进
     // `ReasoningEffortId(null)`，等于又发了一个非法档位。
     ...reasoningEffort == null ? {} : { reasoningEffort: ReasoningEffortId(reasoningEffort) },
-    ...gatewaySessionFor(provider) === undefined ? {} : { sessionId: gatewaySessionFor(provider) },
     signal,
   }
 }
